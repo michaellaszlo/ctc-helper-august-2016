@@ -16,33 +16,56 @@
 
 body {
   font-family: 'Roboto', sans-serif;
-  font-size: 32px;
+  font-size: 30px;
 }
 
 #wrapper {
   margin: 25px 15px;
 }
 
-.inputContainer {
+.timeContainer {
   border-top: 1px solid #eee;
   padding-top: 20px;
   margin-bottom: 20px;
 }
-.inputContainer div {
+.timeContainer div {
   display: inline;
 }
-.inputContainer .label {
-  color: #888;
-  padding: 1px 5px;
+.timeContainer .label {
   margin-right: 15px;
 }
 
-.digitContainer {
-  font-family: 'Droid Sans Mono', sans-serif;
-  text-align: center;
-  padding: 10px 5px;
-  position: relative;
+.timeContainer .label, .timeContainer .unit {
+  color: #888;
+}
+.timeContainer .pace {
   color: #333;
+}
+.timeContainer .label, .outputContainer {
+  font-size: 25px;
+  position: relative;
+  bottom: 2px;
+}
+
+.outputContainer.disabled {
+  visibility: hidden;
+}
+.outputContainer .pace {
+  margin-left: 15px;
+}
+.outputContainer .unit {
+}
+
+.time {
+  display: block;
+  white-space: nowrap;
+}
+
+.digitContainer {
+  color: #333;
+  text-align: center;
+  padding: 12px 5px;
+  position: relative;
 }
 .digitContainer .digit {
 }
@@ -64,7 +87,7 @@ body {
   opacity: 0.20;
 }
 .button.plus canvas {
-  top: 0;
+  top: -1px;
 }
 .button.minus canvas {
   bottom: 0;
