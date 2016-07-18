@@ -9,13 +9,23 @@ var Calc = (function () {
       distances = [ 400, 300, 200, 100 ];
 
   function update() {
-    var i, distance, timeInput, time,
-        times = [];
+    var i, distance, timeInput, digits, punctuation, time, pace,
+        total = 0,
+        count = 0;
     for (i = 0; i < distances.length; ++i) {
       distance = distances[i];
       timeInput = timeInputs[distance];
       if (timeInput === undefined) {
         continue;
+      }
+      digits = timeInput.digits;
+      punctuation = timeInput.punctuation;
+      if (digits[600].value == 0) {
+        M.classAdd(digits[600].container, 'disabled');
+        M.classAdd(punctuation.colon, 'disabled');
+      } else {
+        M.classRemove(digits[600].container, 'disabled');
+        M.classRemove(punctuation.colon, 'disabled');
       }
       time = timeInput.getTime();
       if (time == 0) {
@@ -24,10 +34,22 @@ var Calc = (function () {
         continue;
       }
       timeStorage[distance] = time;
-      timeInput.output.set(time * 500 / distance);
-      times.push(time);
+      pace = time * 500 / distance;
+      timeInput.output.set(pace);
+      total += pace;
+      ++count;
     }
     localStorage.setItem('timeStorage', JSON.stringify(timeStorage));
+    if (totalOutput === undefined) {
+      return;
+    }
+    if (count != distances.length) {
+      totalOutput.setTotal(0);
+      M.classAdd(totalOutput.container, 'disabled');
+    } else  {
+      totalOutput.setTotal(total);
+      M.classRemove(totalOutput.container, 'disabled');
+    }
   }
 
   function timeToUnitValues(time) {
@@ -45,7 +67,7 @@ var Calc = (function () {
     return values;
   }
 
-  function formatPace(time) {
+  function formatTime(time) {
     var values = timeToUnitValues(time);
     return values[600] + ':' + values[100] + values[10] + '.' + values[1];
   }
@@ -58,10 +80,10 @@ var Calc = (function () {
         output = { container: container };
     output.set = function (value) {
       if (value == 0) {
-        pace.innerHTML = value;
+        pace.innerHTML = 0;
         M.classAdd(container, 'disabled');
       } else {
-        pace.innerHTML = formatPace(value);
+        pace.innerHTML = formatTime(value);
         M.classRemove(container, 'disabled');
       }
     };
@@ -72,13 +94,13 @@ var Calc = (function () {
     var canvas = M.make('canvas', { parent: container }),
         context = canvas.getContext('2d'),
         width = canvas.width = container.offsetWidth,
-        height = canvas.height = container.offsetHeight / 2;
+        height = canvas.height = container.offsetHeight * 0.6;
     context.beginPath();
     context.moveTo(width / 5, (invert ? 1 : 4) * height / 5);
     context.lineTo(width / 2, (invert ? 4 : 1) * height / 5);
     context.lineTo(4 * width / 5, (invert ? 1 : 4) * height / 5);
     context.lineWidth = 2;
-    context.fillStyle = '#0c2789';
+    context.fillStyle = '#196798';
     context.fill();
     context.closePath();
   }
@@ -116,15 +138,19 @@ var Calc = (function () {
     var container = M.make('div', { className: 'timeContainer' }),
         time = M.make('div', { className: 'time' }),
         digits = {},
-        input = { container: container, digits: digits };
+        punctuation = {},
+        input = { container: container, digits: digits,
+            punctuation: punctuation };
     container.appendChild(M.make('div', { className: 'label',
         innerHTML: distance + ' m' }));
+    container.appendChild(M.make('span', { innerHTML: ' ' }));
     container.appendChild(time);
+    container.appendChild(M.make('span', { innerHTML: ' ' }));
     time.appendChild((digits[600] = makeDigitInput(10)).container);
-    time.appendChild(M.make('div', { innerHTML: ':' }));
+    time.appendChild(punctuation.colon = M.make('div', { innerHTML: ':' }));
     time.appendChild((digits[100] = makeDigitInput(6)).container);
     time.appendChild((digits[10] = makeDigitInput(10)).container);
-    time.appendChild(M.make('div', { innerHTML: '.' }));
+    time.appendChild(punctuation.dot = M.make('div', { innerHTML: '.' }));
     time.appendChild((digits[1] = makeDigitInput(10)).container);
     container.appendChild((input.output = makeOutput()).container);
     input.paint = function () {
@@ -149,6 +175,29 @@ var Calc = (function () {
     return input;
   }
 
+  function makeTimeOutput(distance) {
+    var container = M.make('div', { className: 'timeContainer total' }),
+        time = M.make('div', { className: 'time' }),
+        pace = makeOutput(),
+        output = { container: container };
+    container.appendChild(M.make('div', { className: 'label',
+        innerHTML: 'CTC score' }));
+    container.appendChild(M.make('span', { innerHTML: ' ' }));
+    container.appendChild(time);
+    container.appendChild(M.make('span', { innerHTML: ' ' }));
+    container.appendChild(pace.container);
+    output.setTotal = function (total) {
+      if (total == 0) {
+        time.innerHTML = '';
+        pace.set(0);
+      } else {
+        time.innerHTML = formatTime(total);
+        pace.set(Math.round(total / 4));
+      }
+    };
+    return output;
+  }
+
   function load() {
     var timeInput, distance, time,
         wrapper = document.getElementById('wrapper'),
@@ -166,6 +215,8 @@ var Calc = (function () {
         timeInput.setTime(time);
       }
     }
+    totalOutput = makeTimeOutput();
+    wrapper.appendChild(totalOutput.container);
     update();
   }
 
