@@ -28,16 +28,16 @@ var Calc = (function () {
         M.classRemove(punctuation.colon, 'disabled');
       }
       time = timeInput.getTime();
-      if (time == 0) {
-        delete timeStorage[distance];
-        timeInput.output.set(0);
-        continue;
-      }
       timeStorage[distance] = time;
       pace = time * 500 / distance;
-      timeInput.output.set(pace);
-      total += pace;
-      ++count;
+      timeInput.output.setPace(pace);
+      if (time == 0) {
+        M.classAdd(timeInput.container, 'disabled');
+      } else {
+        M.classRemove(timeInput.container, 'disabled');
+        total += pace;
+        ++count;
+      }
     }
     localStorage.setItem('timeStorage', JSON.stringify(timeStorage));
     if (totalOutput === undefined) {
@@ -54,21 +54,19 @@ var Calc = (function () {
 
   function timeToUnitValues(time) {
     var i, unit,
-        values = {},
-        round = Math.floor;
-    for (i = 0; i < units.length; ++i) {
+        values = {};
+    for (i = 0; i < units.length - 1; ++i) {
       unit = units[i];
-      if (i == units.length - 1) {
-        round = Math.round;
-      }
-      values[unit] = round(time / unit);
+      values[unit] = Math.floor(time / unit);
       time -= values[unit] * unit;
     }
+    unit = units[units.length - 1];
+    values[unit] = Math.round(time / unit);
     return values;
   }
 
   function formatTime(time) {
-    var values = timeToUnitValues(time);
+    var values = timeToUnitValues(Math.round(time));
     return values[600] + ':' + values[100] + values[10] + '.' + values[1];
   }
 
@@ -78,14 +76,8 @@ var Calc = (function () {
         unit = M.make('div', { className: 'unit', parent: container,
             innerHTML: ' / 500 m' }),
         output = { container: container };
-    output.set = function (value) {
-      if (value == 0) {
-        pace.innerHTML = 0;
-        M.classAdd(container, 'disabled');
-      } else {
-        pace.innerHTML = formatTime(value);
-        M.classRemove(container, 'disabled');
-      }
+    output.setPace = function (value) {
+      pace.innerHTML = formatTime(value);
     };
     return output;
   }
@@ -111,16 +103,16 @@ var Calc = (function () {
         minusButton = M.make('div', { className: 'button minus' }),
         digit = M.make('div', { className: 'digit', innerHTML: '0' }),
         input = { container: container, value: 0 };
-    input.set = function (value) {
+    input.setDigit = function (value) {
       input.value = value;
       digit.innerHTML = value;
       update();
     };
     plusButton.onclick = function () {
-      input.set(input.value + 1 == count ? 0 : input.value + 1);
+      input.setDigit(input.value + 1 == count ? 0 : input.value + 1);
     };
     minusButton.onclick = function () {
-      input.set(input.value - 1 == -1 ? count - 1: input.value - 1);
+      input.setDigit(input.value - 1 == -1 ? count - 1: input.value - 1);
     };
     M.makeUnselectable(plusButton);
     M.makeUnselectable(minusButton);
@@ -139,7 +131,7 @@ var Calc = (function () {
         time = M.make('div', { className: 'time' }),
         digits = {},
         punctuation = {},
-        input = { container: container, digits: digits,
+        input = { container: container, timeContainer: time, digits: digits,
             punctuation: punctuation };
     container.appendChild(M.make('div', { className: 'label',
         innerHTML: distance + ' m' }));
@@ -169,7 +161,7 @@ var Calc = (function () {
     input.setTime = function (time) {
       var i, values = timeToUnitValues(time);
       for (i = 0; i < units.length; ++i) {
-        digits[units[i]].set(values[units[i]]);
+        digits[units[i]].setDigit(values[units[i]]);
       }
     };
     return input;
@@ -187,13 +179,8 @@ var Calc = (function () {
     container.appendChild(M.make('span', { innerHTML: ' ' }));
     container.appendChild(pace.container);
     output.setTotal = function (total) {
-      if (total == 0) {
-        time.innerHTML = '';
-        pace.set(0);
-      } else {
-        time.innerHTML = formatTime(total);
-        pace.set(Math.round(total / 4));
-      }
+      time.innerHTML = formatTime(total);
+      pace.setPace(Math.round(total / 4));
     };
     return output;
   }

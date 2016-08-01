@@ -57,24 +57,20 @@ body {
 .timeContainer.total .time {
   padding: 2px 8px;
   background: #f6f5dd;
-  background-radius: 4px;
-}
-
-.timeContainer.disabled, .outputContainer.disabled {
-  visibility: hidden;
-}
-.outputContainer .pace {
-  margin-left: 15px;
-}
-.outputContainer .unit {
+  border-radius: 3px;
 }
 
 .timeContainer .label, .time, .outputContainer {
   white-space: nowrap;
 }
-.outputContainer {
+.outputContainer .pace {
+  margin-left: 15px;
 }
-.time .disabled {
+.disabled .outputContainer, .total.disabled div {
+  visibility: hidden;
+}
+
+.disabled .digitContainer, .time .disabled, .disabled .time {
   color: #ccc;
 }
 
